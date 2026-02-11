@@ -14,6 +14,7 @@ export default class HttpCalloutEditor extends LightningElement {
 
     // ── Flow Builder CPE API ────────────────────────────────────────
     _inputVariables = [];
+    _initialized = false;
 
     @api
     get inputVariables() {
@@ -21,7 +22,10 @@ export default class HttpCalloutEditor extends LightningElement {
     }
     set inputVariables(variables) {
         this._inputVariables = variables || [];
-        this._initFromInputVariables();
+        if (!this._initialized) {
+            this._initFromInputVariables();
+            this._initialized = true;
+        }
     }
 
     // ── Local state ─────────────────────────────────────────────────
