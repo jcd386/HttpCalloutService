@@ -9,8 +9,8 @@ A generic, Flow-invocable Apex class for performing HTTP callouts from Salesforc
 - **Flow-Ready**: Appears as "HTTP Callout" action in Flow Builder under the Integration category
 - **Named Credential Mode**: Secure, platform-managed authentication for production APIs
 - **Direct URL Mode**: Flexible endpoint targeting for ad-hoc integrations (requires Remote Site Setting)
-- **Structured Headers & Query Params**: Use `KeyValuePair` collections — no JSON required. Add key-value pairs using Flow variables instead of hand-typing JSON strings
-- **Structured Output**: Status code, response body, response headers (as KeyValuePair collection), success boolean, and error message
+- **Inline Headers & Query Params**: Up to 5 headers and 5 query parameters configured directly in the action UI — no collections, variables, or JSON required
+- **Structured Output**: Status code, response body, response headers (JSON), success boolean, and error message
 - **Bulk-Safe**: Processes multiple callout requests in a single invocation
 
 ## Apex Classes
@@ -18,7 +18,7 @@ A generic, Flow-invocable Apex class for performing HTTP callouts from Salesforc
 | Class | Description |
 |-------|-------------|
 | `HttpCalloutService.cls` | Invocable service class with configurable HTTP callout logic |
-| `HttpCalloutServiceTest.cls` | Test class with 34 tests covering all methods and error scenarios |
+| `HttpCalloutServiceTest.cls` | Test class with 54 tests covering all methods and error scenarios |
 
 ## Installation
 
@@ -44,9 +44,11 @@ sf project deploy start --target-org YOUR_ORG_ALIAS
 1. Open any Flow in Flow Builder
 2. Add an **Action** element
 3. Search for **"HTTP Callout"** (under Integration category)
-4. Configure the inputs:
+4. Configure the inputs — headers and query parameters are filled in directly as fields (no collections needed)
 
 ### Inputs
+
+#### Core Fields
 
 | Input | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -54,12 +56,44 @@ sf project deploy start --target-org YOUR_ORG_ALIAS
 | Named Credential Name | Text | No | Developer name of a Named Credential (e.g., `My_API`) |
 | Endpoint URL | Text | No | Full URL for direct mode (e.g., `https://api.example.com`) |
 | Path | Text | No | Appended to endpoint (e.g., `/api/v1/users`) |
-| Headers | Collection of `KeyValuePair` | No | Request headers as key-value pairs |
 | Body | Text | No | Request body for POST/PUT/PATCH |
-| Query Parameters | Collection of `KeyValuePair` | No | URL query params as key-value pairs (auto URL-encoded) |
 | Timeout (ms) | Number | No | Timeout in milliseconds (default: 30000, max: 120000) |
 
 **Note**: Either Named Credential Name or Endpoint URL is required (not both).
+
+#### Headers (up to 5)
+
+| Input | Type | Description |
+|-------|------|-------------|
+| Header 1 Key | Text | Name of the first request header (e.g., `Authorization`) |
+| Header 1 Value | Text | Value of the first request header (e.g., `Bearer xyz`) |
+| Header 2 Key | Text | Name of the second request header |
+| Header 2 Value | Text | Value of the second request header |
+| Header 3 Key | Text | Name of the third request header |
+| Header 3 Value | Text | Value of the third request header |
+| Header 4 Key | Text | Name of the fourth request header |
+| Header 4 Value | Text | Value of the fourth request header |
+| Header 5 Key | Text | Name of the fifth request header |
+| Header 5 Value | Text | Value of the fifth request header |
+
+Only fill in the header slots you need. Blank key fields are ignored.
+
+#### Query Parameters (up to 5)
+
+| Input | Type | Description |
+|-------|------|-------------|
+| Query Param 1 Key | Text | Name of the first query parameter |
+| Query Param 1 Value | Text | Value of the first query parameter |
+| Query Param 2 Key | Text | Name of the second query parameter |
+| Query Param 2 Value | Text | Value of the second query parameter |
+| Query Param 3 Key | Text | Name of the third query parameter |
+| Query Param 3 Value | Text | Value of the third query parameter |
+| Query Param 4 Key | Text | Name of the fourth query parameter |
+| Query Param 4 Value | Text | Value of the fourth query parameter |
+| Query Param 5 Key | Text | Name of the fifth query parameter |
+| Query Param 5 Value | Text | Value of the fifth query parameter |
+
+Query parameter values are automatically URL-encoded. Only fill in the slots you need.
 
 ### Outputs
 
@@ -67,27 +101,9 @@ sf project deploy start --target-org YOUR_ORG_ALIAS
 |--------|------|-------------|
 | Status Code | Number | HTTP response status code (200, 401, 500, etc.) |
 | Response Body | Text | Full response body |
-| Response Headers | Collection of `KeyValuePair` | All response headers as key-value pairs |
+| Response Headers JSON | Text | All response headers as a JSON string (e.g., `{"Content-Type":"application/json"}`) |
 | Success | Boolean | `true` if status code is 2xx |
 | Error Message | Text | Error details on validation failure, exception, or non-2xx response |
-
-### KeyValuePair Type
-
-`KeyValuePair` is an Apex-Defined Data Type with two fields:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Key | Text | Header name or query parameter name |
-| Value | Text | Header value or query parameter value |
-
-### Setting Up Headers/Query Params in Flow
-
-1. **Create a variable**: New Resource > Variable > Data Type: Apex-Defined > Type: `HttpCalloutService.KeyValuePair`
-2. **Set the key and value**: Use an Assignment element to set `{!myHeader.key}` = `Authorization` and `{!myHeader.value}` = `Bearer xyz`
-3. **Add to a collection**: Use an Assignment element to add `{!myHeader}` to a collection variable `{!headerCollection}`
-4. **Pass to the action**: Set the Headers input to `{!headerCollection}`
-
-Repeat steps 1-3 for each header or query parameter you need.
 
 ### Example: Named Credential GET with Query Params
 
@@ -95,16 +111,22 @@ Repeat steps 1-3 for each header or query parameter you need.
 HTTP Method:            GET
 Named Credential Name:  My_External_API
 Path:                   /api/v1/accounts
-Query Parameters:       Collection with: {key: "status", value: "active"}, {key: "limit", value: "25"}
+Query Param 1 Key:      status
+Query Param 1 Value:    active
+Query Param 2 Key:      limit
+Query Param 2 Value:    25
 ```
 
 ### Example: Direct URL POST with Headers
 
 ```
-HTTP Method:    POST
-Endpoint URL:   https://hooks.example.com/webhook
-Headers:        Collection with: {key: "Authorization", value: "Bearer my-token"}, {key: "X-Custom", value: "value"}
-Body:           {"event": "record.created", "id": "001xx000003ABCD"}
+HTTP Method:        POST
+Endpoint URL:       https://hooks.example.com/webhook
+Header 1 Key:       Authorization
+Header 1 Value:     Bearer my-token
+Header 2 Key:       X-Custom
+Header 2 Value:     value
+Body:               {"event": "record.created", "id": "001xx000003ABCD"}
 ```
 
 ## Setting Up Named Credentials
