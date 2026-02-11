@@ -179,10 +179,8 @@ export default class HttpCalloutEditor extends LightningElement {
     }
 
     _dispatchHeadersJson() {
-        const filtered = this.headers
-            .filter(h => h.key && h.key.trim() !== '')
-            .map(h => ({ key: h.key, value: h.value || '' }));
-        const json = filtered.length > 0 ? JSON.stringify(filtered) : '';
+        const payload = this.headers.map(h => ({ key: h.key || '', value: h.value || '' }));
+        const json = payload.length > 0 ? JSON.stringify(payload) : '';
         this._dispatchChange('headersJson', json, 'String');
     }
 
@@ -214,10 +212,8 @@ export default class HttpCalloutEditor extends LightningElement {
     }
 
     _dispatchQueryParamsJson() {
-        const filtered = this.queryParams
-            .filter(p => p.key && p.key.trim() !== '')
-            .map(p => ({ key: p.key, value: p.value || '' }));
-        const json = filtered.length > 0 ? JSON.stringify(filtered) : '';
+        const payload = this.queryParams.map(p => ({ key: p.key || '', value: p.value || '' }));
+        const json = payload.length > 0 ? JSON.stringify(payload) : '';
         this._dispatchChange('queryParamsJson', json, 'String');
     }
 }
