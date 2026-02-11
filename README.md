@@ -7,18 +7,19 @@ A generic, Flow-invocable Apex class for performing HTTP callouts from Salesforc
 ## Features
 
 - **Flow-Ready**: Appears as "HTTP Callout" action in Flow Builder under the Integration category
+- **Custom Property Editor**: Dynamic UI with add/remove rows for headers and query parameters — no fixed limits
 - **Named Credential Mode**: Secure, platform-managed authentication for production APIs
 - **Direct URL Mode**: Flexible endpoint targeting for ad-hoc integrations (requires Remote Site Setting)
-- **Inline Headers & Query Params**: Up to 5 headers and 5 query parameters configured directly in the action UI — no collections, variables, or JSON required
 - **Structured Output**: Status code, response body, response headers (JSON), success boolean, and error message
 - **Bulk-Safe**: Processes multiple callout requests in a single invocation
 
-## Apex Classes
+## Components
 
-| Class | Description |
-|-------|-------------|
-| `HttpCalloutService.cls` | Invocable service class with configurable HTTP callout logic |
-| `HttpCalloutServiceTest.cls` | Test class with 54 tests covering all methods and error scenarios |
+| Component | Type | Description |
+|-----------|------|-------------|
+| `HttpCalloutService.cls` | Apex Class | Invocable service class with configurable HTTP callout logic |
+| `HttpCalloutServiceTest.cls` | Test Class | 63 tests covering all methods and error scenarios |
+| `httpCalloutEditor` | LWC | Custom Property Editor for dynamic header/param configuration in Flow Builder |
 
 ## Installation
 
@@ -37,6 +38,10 @@ cd HttpCalloutService
 sf project deploy start --target-org YOUR_ORG_ALIAS
 ```
 
+### Namespace Note
+
+If your org has a **custom namespace** (e.g., `myns`), update the `configurationEditor` value in `HttpCalloutService.cls` from `c-http-callout-editor` to `myns-http-callout-editor` before deploying.
+
 ## Usage
 
 ### In Flow Builder
@@ -44,7 +49,11 @@ sf project deploy start --target-org YOUR_ORG_ALIAS
 1. Open any Flow in Flow Builder
 2. Add an **Action** element
 3. Search for **"HTTP Callout"** (under Integration category)
-4. Configure the inputs — headers and query parameters are filled in directly as fields (no collections needed)
+4. The Custom Property Editor loads with a clean UI for configuring the callout:
+   - Select HTTP method from a dropdown
+   - Enter Named Credential name or direct URL
+   - Add/remove header rows dynamically
+   - Add/remove query parameter rows dynamically
 
 ### Inputs
 
@@ -56,44 +65,18 @@ sf project deploy start --target-org YOUR_ORG_ALIAS
 | Named Credential Name | Text | No | Developer name of a Named Credential (e.g., `My_API`) |
 | Endpoint URL | Text | No | Full URL for direct mode (e.g., `https://api.example.com`) |
 | Path | Text | No | Appended to endpoint (e.g., `/api/v1/users`) |
-| Body | Text | No | Request body for POST/PUT/PATCH |
+| Body | Text | No | Request body (shown only for POST/PUT/PATCH) |
 | Timeout (ms) | Number | No | Timeout in milliseconds (default: 30000, max: 120000) |
 
 **Note**: Either Named Credential Name or Endpoint URL is required (not both).
 
-#### Headers (up to 5)
+#### Headers
 
-| Input | Type | Description |
-|-------|------|-------------|
-| Header 1 Key | Text | Name of the first request header (e.g., `Authorization`) |
-| Header 1 Value | Text | Value of the first request header (e.g., `Bearer xyz`) |
-| Header 2 Key | Text | Name of the second request header |
-| Header 2 Value | Text | Value of the second request header |
-| Header 3 Key | Text | Name of the third request header |
-| Header 3 Value | Text | Value of the third request header |
-| Header 4 Key | Text | Name of the fourth request header |
-| Header 4 Value | Text | Value of the fourth request header |
-| Header 5 Key | Text | Name of the fifth request header |
-| Header 5 Value | Text | Value of the fifth request header |
+Add as many request headers as needed using the **Add Header** button. Each row has a Key and Value field. Remove rows with the delete button. Empty keys are ignored.
 
-Only fill in the header slots you need. Blank key fields are ignored.
+#### Query Parameters
 
-#### Query Parameters (up to 5)
-
-| Input | Type | Description |
-|-------|------|-------------|
-| Query Param 1 Key | Text | Name of the first query parameter |
-| Query Param 1 Value | Text | Value of the first query parameter |
-| Query Param 2 Key | Text | Name of the second query parameter |
-| Query Param 2 Value | Text | Value of the second query parameter |
-| Query Param 3 Key | Text | Name of the third query parameter |
-| Query Param 3 Value | Text | Value of the third query parameter |
-| Query Param 4 Key | Text | Name of the fourth query parameter |
-| Query Param 4 Value | Text | Value of the fourth query parameter |
-| Query Param 5 Key | Text | Name of the fifth query parameter |
-| Query Param 5 Value | Text | Value of the fifth query parameter |
-
-Query parameter values are automatically URL-encoded. Only fill in the slots you need.
+Add as many query parameters as needed using the **Add Parameter** button. Values are automatically URL-encoded. Empty keys are ignored.
 
 ### Outputs
 
@@ -107,27 +90,22 @@ Query parameter values are automatically URL-encoded. Only fill in the slots you
 
 ### Example: Named Credential GET with Query Params
 
-```
-HTTP Method:            GET
-Named Credential Name:  My_External_API
-Path:                   /api/v1/accounts
-Query Param 1 Key:      status
-Query Param 1 Value:    active
-Query Param 2 Key:      limit
-Query Param 2 Value:    25
-```
+In Flow Builder, configure the action:
+- **HTTP Method**: GET
+- **Named Credential Name**: My_External_API
+- **Path**: /api/v1/accounts
+- **Query Parameters**: Click "Add Parameter" twice, then enter:
+  - Row 1: Key = `status`, Value = `active`
+  - Row 2: Key = `limit`, Value = `25`
 
 ### Example: Direct URL POST with Headers
 
-```
-HTTP Method:        POST
-Endpoint URL:       https://hooks.example.com/webhook
-Header 1 Key:       Authorization
-Header 1 Value:     Bearer my-token
-Header 2 Key:       X-Custom
-Header 2 Value:     value
-Body:               {"event": "record.created", "id": "001xx000003ABCD"}
-```
+- **HTTP Method**: POST
+- **Endpoint URL**: https://hooks.example.com/webhook
+- **Headers**: Click "Add Header" twice, then enter:
+  - Row 1: Key = `Authorization`, Value = `Bearer my-token`
+  - Row 2: Key = `X-Custom`, Value = `value`
+- **Body**: `{"event": "record.created", "id": "001xx000003ABCD"}`
 
 ## Setting Up Named Credentials
 

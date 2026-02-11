@@ -1,0 +1,198 @@
+<template>
+    <!-- HTTP Method -->
+    <div class="slds-m-bottom_small">
+        <lightning-combobox
+            name="httpMethod"
+            label="HTTP Method"
+            value={httpMethod}
+            options={httpMethodOptions}
+            onchange={handleHttpMethodChange}
+            required
+        ></lightning-combobox>
+    </div>
+
+    <!-- Named Credential Name -->
+    <div class="slds-m-bottom_small">
+        <lightning-input
+            type="text"
+            label="Named Credential Name"
+            value={namedCredentialName}
+            onchange={handleNamedCredentialChange}
+            placeholder="e.g., My_API"
+            field-level-help="Developer name of a Named Credential. Either this or Endpoint URL is required."
+        ></lightning-input>
+    </div>
+
+    <!-- Endpoint URL -->
+    <div class="slds-m-bottom_small">
+        <lightning-input
+            type="text"
+            label="Endpoint URL"
+            value={endpointUrl}
+            onchange={handleEndpointUrlChange}
+            placeholder="e.g., https://api.example.com"
+            field-level-help="Full URL for direct mode (requires Remote Site Setting). Either this or Named Credential is required."
+        ></lightning-input>
+    </div>
+
+    <!-- Path -->
+    <div class="slds-m-bottom_small">
+        <lightning-input
+            type="text"
+            label="Path"
+            value={path}
+            onchange={handlePathChange}
+            placeholder="e.g., /api/v1/users"
+            field-level-help="Path appended to the endpoint URL"
+        ></lightning-input>
+    </div>
+
+    <!-- Body (conditional) -->
+    <template if:true={showBodyField}>
+        <div class="slds-m-bottom_small">
+            <lightning-textarea
+                label="Body"
+                value={body}
+                onchange={handleBodyChange}
+                placeholder='e.g., {"name": "Test"}'
+                field-level-help="Request body for POST/PUT/PATCH"
+            ></lightning-textarea>
+        </div>
+    </template>
+
+    <!-- Timeout -->
+    <div class="slds-m-bottom_small">
+        <lightning-input
+            type="number"
+            label="Timeout (ms)"
+            value={timeout}
+            onchange={handleTimeoutChange}
+            placeholder="30000"
+            min="1"
+            max="120000"
+            field-level-help="Timeout in milliseconds (default: 30000, max: 120000)"
+        ></lightning-input>
+    </div>
+
+    <!-- ── Headers Section ──────────────────────────────────────── -->
+    <div class="slds-m-top_medium slds-m-bottom_small">
+        <div class="section-header">
+            <h3 class="slds-text-heading_small">Headers</h3>
+            <lightning-button
+                label="Add Header"
+                icon-name="utility:add"
+                onclick={handleAddHeader}
+                variant="neutral"
+            ></lightning-button>
+        </div>
+
+        <template if:true={hasHeaders}>
+            <div class="column-labels slds-m-top_x-small">
+                <span class="slds-text-body_small slds-text-color_weak label-key">Key</span>
+                <span class="slds-text-body_small slds-text-color_weak label-value">Value</span>
+                <span class="remove-placeholder"></span>
+            </div>
+
+            <template for:each={headers} for:item="header">
+                <div key={header.id} class="key-value-row slds-m-top_xx-small">
+                    <lightning-input
+                        type="text"
+                        label="Key"
+                        value={header.key}
+                        data-id={header.id}
+                        onchange={handleHeaderKeyChange}
+                        placeholder="e.g., Authorization"
+                        variant="label-hidden"
+                        class="input-key"
+                    ></lightning-input>
+                    <lightning-input
+                        type="text"
+                        label="Value"
+                        value={header.value}
+                        data-id={header.id}
+                        onchange={handleHeaderValueChange}
+                        placeholder="e.g., Bearer xyz"
+                        variant="label-hidden"
+                        class="input-value"
+                    ></lightning-input>
+                    <lightning-button-icon
+                        icon-name="utility:delete"
+                        alternative-text="Remove header"
+                        data-id={header.id}
+                        onclick={handleRemoveHeader}
+                        variant="bare"
+                        size="medium"
+                        class="remove-btn"
+                    ></lightning-button-icon>
+                </div>
+            </template>
+        </template>
+
+        <template if:false={hasHeaders}>
+            <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                No headers. Click "Add Header" to add one.
+            </p>
+        </template>
+    </div>
+
+    <!-- ── Query Parameters Section ─────────────────────────────── -->
+    <div class="slds-m-top_medium slds-m-bottom_small">
+        <div class="section-header">
+            <h3 class="slds-text-heading_small">Query Parameters</h3>
+            <lightning-button
+                label="Add Parameter"
+                icon-name="utility:add"
+                onclick={handleAddQueryParam}
+                variant="neutral"
+            ></lightning-button>
+        </div>
+
+        <template if:true={hasQueryParams}>
+            <div class="column-labels slds-m-top_x-small">
+                <span class="slds-text-body_small slds-text-color_weak label-key">Key</span>
+                <span class="slds-text-body_small slds-text-color_weak label-value">Value</span>
+                <span class="remove-placeholder"></span>
+            </div>
+
+            <template for:each={queryParams} for:item="param">
+                <div key={param.id} class="key-value-row slds-m-top_xx-small">
+                    <lightning-input
+                        type="text"
+                        label="Key"
+                        value={param.key}
+                        data-id={param.id}
+                        onchange={handleParamKeyChange}
+                        placeholder="e.g., status"
+                        variant="label-hidden"
+                        class="input-key"
+                    ></lightning-input>
+                    <lightning-input
+                        type="text"
+                        label="Value"
+                        value={param.value}
+                        data-id={param.id}
+                        onchange={handleParamValueChange}
+                        placeholder="e.g., active"
+                        variant="label-hidden"
+                        class="input-value"
+                    ></lightning-input>
+                    <lightning-button-icon
+                        icon-name="utility:delete"
+                        alternative-text="Remove parameter"
+                        data-id={param.id}
+                        onclick={handleRemoveQueryParam}
+                        variant="bare"
+                        size="medium"
+                        class="remove-btn"
+                    ></lightning-button-icon>
+                </div>
+            </template>
+        </template>
+
+        <template if:false={hasQueryParams}>
+            <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                No query parameters. Click "Add Parameter" to add one.
+            </p>
+        </template>
+    </div>
+</template>

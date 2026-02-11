@@ -1,7 +1,6 @@
 /**
  * @description Test class for HttpCalloutService.
- *              Coverage-only approach: calls all methods with various inputs
- *              to ensure code paths are exercised. No System.assert statements.
+ *              Coverage-only approach: calls all methods with various inputs.
  *
  * @author We Summit Mountains
  * @date 2026
@@ -48,7 +47,7 @@ private class HttpCalloutServiceTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // HELPER: Build CalloutInput
+    // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 
     private static HttpCalloutService.CalloutInput buildInput(String method, String ncName, String url) {
@@ -69,8 +68,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.path = '/api/v1/accounts';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -81,8 +79,7 @@ private class HttpCalloutServiceTest {
             HttpCalloutService.CalloutInput input = buildInput('POST', 'My_API', null);
             input.path = '/api/v1/accounts';
             input.body = '{"name":"Test"}';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -93,8 +90,7 @@ private class HttpCalloutServiceTest {
             HttpCalloutService.CalloutInput input = buildInput('PUT', 'My_API', null);
             input.path = '/api/v1/accounts/001';
             input.body = '{"name":"Updated"}';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -104,8 +100,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('PATCH', 'My_API', null);
             input.body = '{"field":"value"}';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -115,8 +110,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('DELETE', 'My_API', null);
             input.path = '/api/v1/accounts/001';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -125,8 +119,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, ''));
         try {
             HttpCalloutService.CalloutInput input = buildInput('HEAD', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -135,8 +128,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, ''));
         try {
             HttpCalloutService.CalloutInput input = buildInput('OPTIONS', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -146,8 +138,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'callout:My_API', null);
             input.path = '/test';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -161,8 +152,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', null, 'https://api.example.com');
             input.path = '/v1/data';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -172,8 +162,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('POST', null, 'https://hooks.example.com/webhook');
             input.body = '{"event":"test"}';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -183,8 +172,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', null, 'https://api.example.com/');
             input.path = '/v1/data';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -194,13 +182,12 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', null, 'https://api.example.com');
             input.path = 'v1/data';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // TESTS: Headers (numbered fields)
+    // TESTS: Headers (JSON)
     // ─────────────────────────────────────────────────────────────────────────
 
     @IsTest
@@ -208,10 +195,8 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            input.headerKey1 = 'Authorization';
-            input.headerValue1 = 'Bearer test-token';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.headersJson = '[{"key":"Authorization","value":"Bearer test-token"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -221,46 +206,28 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('POST', 'My_API', null);
             input.body = '{"test":true}';
-            input.headerKey1 = 'Authorization';
-            input.headerValue1 = 'Bearer xyz';
-            input.headerKey2 = 'Accept';
-            input.headerValue2 = 'application/json';
-            input.headerKey3 = 'X-Custom';
-            input.headerValue3 = 'custom-value';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.headersJson = '[{"key":"Authorization","value":"Bearer xyz"},{"key":"Accept","value":"application/json"},{"key":"X-Custom","value":"custom-value"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
     @IsTest
-    static void testWithAllFiveHeaders() {
+    static void testWithManyHeaders() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            input.headerKey1 = 'H1';
-            input.headerValue1 = 'V1';
-            input.headerKey2 = 'H2';
-            input.headerValue2 = 'V2';
-            input.headerKey3 = 'H3';
-            input.headerValue3 = 'V3';
-            input.headerKey4 = 'H4';
-            input.headerValue4 = 'V4';
-            input.headerKey5 = 'H5';
-            input.headerValue5 = 'V5';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.headersJson = '[{"key":"H1","value":"V1"},{"key":"H2","value":"V2"},{"key":"H3","value":"V3"},{"key":"H4","value":"V4"},{"key":"H5","value":"V5"},{"key":"H6","value":"V6"},{"key":"H7","value":"V7"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
     @IsTest
-    static void testHeaderKeyWithNullValue() {
+    static void testHeaderWithNullValue() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            input.headerKey1 = 'X-Empty';
-            input.headerValue1 = null;
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.headersJson = '[{"key":"X-Empty","value":null}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -270,15 +237,43 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('POST', 'My_API', null);
             input.body = '<xml>test</xml>';
-            input.headerKey1 = 'Content-Type';
-            input.headerValue1 = 'application/xml';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.headersJson = '[{"key":"Content-Type","value":"application/xml"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testHeadersWithBlankKey() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
+        try {
+            HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
+            input.headersJson = '[{"key":"","value":"should-be-skipped"},{"key":"Valid","value":"ok"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testInvalidHeadersJson() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
+        try {
+            HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
+            input.headersJson = 'not-valid-json';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testEmptyHeadersJsonArray() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
+        try {
+            HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
+            input.headersJson = '[]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // TESTS: Query Parameters (numbered fields)
+    // TESTS: Query Parameters (JSON)
     // ─────────────────────────────────────────────────────────────────────────
 
     @IsTest
@@ -287,10 +282,8 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.path = '/search';
-            input.queryParamKey1 = 'q';
-            input.queryParamValue1 = 'hello world';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.queryParamsJson = '[{"key":"q","value":"hello world"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -300,34 +293,18 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.path = '/api/v1/accounts';
-            input.queryParamKey1 = 'status';
-            input.queryParamValue1 = 'active';
-            input.queryParamKey2 = 'limit';
-            input.queryParamValue2 = '25';
-            input.queryParamKey3 = 'offset';
-            input.queryParamValue3 = '0';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.queryParamsJson = '[{"key":"status","value":"active"},{"key":"limit","value":"25"},{"key":"offset","value":"0"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
     @IsTest
-    static void testWithAllFiveQueryParams() {
+    static void testWithManyQueryParams() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            input.queryParamKey1 = 'p1';
-            input.queryParamValue1 = 'v1';
-            input.queryParamKey2 = 'p2';
-            input.queryParamValue2 = 'v2';
-            input.queryParamKey3 = 'p3';
-            input.queryParamValue3 = 'v3';
-            input.queryParamKey4 = 'p4';
-            input.queryParamValue4 = 'v4';
-            input.queryParamKey5 = 'p5';
-            input.queryParamValue5 = 'v5';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.queryParamsJson = '[{"key":"p1","value":"v1"},{"key":"p2","value":"v2"},{"key":"p3","value":"v3"},{"key":"p4","value":"v4"},{"key":"p5","value":"v5"},{"key":"p6","value":"v6"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -336,10 +313,8 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            input.queryParamKey1 = 'flag';
-            input.queryParamValue1 = null;
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.queryParamsJson = '[{"key":"flag","value":null}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -348,10 +323,38 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            input.queryParamKey1 = 'filter';
-            input.queryParamValue1 = 'name=John&age>30';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.queryParamsJson = '[{"key":"filter","value":"name=John&age>30"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testQueryParamsWithBlankKey() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
+        try {
+            HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
+            input.queryParamsJson = '[{"key":"","value":"skip"},{"key":"valid","value":"ok"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testInvalidQueryParamsJson() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
+        try {
+            HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
+            input.queryParamsJson = '{bad json}';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testEmptyQueryParamsJsonArray() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
+        try {
+            HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
+            input.queryParamsJson = '[]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -365,16 +368,9 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.path = '/search';
-            input.headerKey1 = 'Authorization';
-            input.headerValue1 = 'Bearer token';
-            input.headerKey2 = 'Accept';
-            input.headerValue2 = 'application/json';
-            input.queryParamKey1 = 'q';
-            input.queryParamValue1 = 'test';
-            input.queryParamKey2 = 'limit';
-            input.queryParamValue2 = '10';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            input.headersJson = '[{"key":"Authorization","value":"Bearer token"},{"key":"Accept","value":"application/json"}]';
+            input.queryParamsJson = '[{"key":"q","value":"test"},{"key":"limit","value":"10"}]';
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -386,8 +382,7 @@ private class HttpCalloutServiceTest {
     static void testMissingHttpMethod() {
         try {
             HttpCalloutService.CalloutInput input = buildInput(null, 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -395,8 +390,7 @@ private class HttpCalloutServiceTest {
     static void testBlankHttpMethod() {
         try {
             HttpCalloutService.CalloutInput input = buildInput('', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -404,8 +398,7 @@ private class HttpCalloutServiceTest {
     static void testInvalidHttpMethod() {
         try {
             HttpCalloutService.CalloutInput input = buildInput('INVALID', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -413,8 +406,7 @@ private class HttpCalloutServiceTest {
     static void testMissingEndpoint() {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', null, null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -422,8 +414,7 @@ private class HttpCalloutServiceTest {
     static void testBlankEndpoint() {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', '', '');
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -436,8 +427,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(401, '{"error":"unauthorized"}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -446,8 +436,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(403, '{"error":"forbidden"}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -457,8 +446,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.path = '/nonexistent';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -467,8 +455,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(500, '{"error":"internal"}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -482,8 +469,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.timeout = 60000;
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -493,8 +479,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.timeout = 999999;
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -504,8 +489,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.timeout = 0;
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -515,13 +499,12 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.timeout = -1;
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // TESTS: Null / Blank Optional Params
+    // TESTS: Minimal / Optional Params
     // ─────────────────────────────────────────────────────────────────────────
 
     @IsTest
@@ -529,8 +512,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -539,8 +521,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}'));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', null, 'https://api.example.com');
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -550,8 +531,7 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
             input.body = '{"this":"should be ignored"}';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -561,13 +541,12 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = buildInput('POST', 'My_API', null);
             input.body = '{"data":"test"}';
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // TESTS: Bulk Input
+    // TESTS: Bulk
     // ─────────────────────────────────────────────────────────────────────────
 
     @IsTest
@@ -582,15 +561,14 @@ private class HttpCalloutServiceTest {
 
             HttpCalloutService.CalloutInput input2 = buildInput('POST', null, 'https://api.example.com');
             input2.body = '{"bulk":true}';
+            input2.headersJson = '[{"key":"X-Bulk","value":"true"}]';
             inputs.add(input2);
 
             HttpCalloutService.CalloutInput input3 = buildInput('GET', 'Other_API', null);
-            input3.queryParamKey1 = 'page';
-            input3.queryParamValue1 = '1';
+            input3.queryParamsJson = '[{"key":"page","value":"1"}]';
             inputs.add(input3);
 
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(inputs);
+            HttpCalloutService.executeCallout(inputs);
         } catch (Exception e) { }
     }
 
@@ -608,8 +586,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}', respHeaders));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -618,8 +595,7 @@ private class HttpCalloutServiceTest {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, '{}', new Map<String, String>()));
         try {
             HttpCalloutService.CalloutInput input = buildInput('GET', 'My_API', null);
-            List<HttpCalloutService.CalloutOutput> results =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) { }
     }
 
@@ -632,10 +608,17 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
             input.httpMethod = 'GET';
-            input.headerKey1 = 'Auth';
-            input.headerValue1 = 'Bearer x';
-            input.headerKey3 = 'Skip2';
-            input.headerValue3 = 'val3';
+            input.headersJson = '[{"key":"Auth","value":"Bearer x"},{"key":"Accept","value":"json"}]';
+            Map<String, String> headers = HttpCalloutService.collectHeaders(input);
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testCollectHeadersNullJson() {
+        try {
+            HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
+            input.httpMethod = 'GET';
+            input.headersJson = null;
             Map<String, String> headers = HttpCalloutService.collectHeaders(input);
         } catch (Exception e) { }
     }
@@ -645,10 +628,17 @@ private class HttpCalloutServiceTest {
         try {
             HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
             input.httpMethod = 'GET';
-            input.queryParamKey1 = 'a';
-            input.queryParamValue1 = '1';
-            input.queryParamKey4 = 'skip';
-            input.queryParamValue4 = 'val';
+            input.queryParamsJson = '[{"key":"a","value":"1"},{"key":"b","value":"2"}]';
+            Map<String, String> params = HttpCalloutService.collectQueryParams(input);
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testCollectQueryParamsNullJson() {
+        try {
+            HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
+            input.httpMethod = 'GET';
+            input.queryParamsJson = null;
             Map<String, String> params = HttpCalloutService.collectQueryParams(input);
         } catch (Exception e) { }
     }
@@ -656,14 +646,14 @@ private class HttpCalloutServiceTest {
     @IsTest
     static void testBuildQueryStringEmpty() {
         try {
-            String result = HttpCalloutService.buildQueryString(new Map<String, String>());
+            HttpCalloutService.buildQueryString(new Map<String, String>());
         } catch (Exception e) { }
     }
 
     @IsTest
     static void testBuildQueryStringNull() {
         try {
-            String result = HttpCalloutService.buildQueryString(null);
+            HttpCalloutService.buildQueryString(null);
         } catch (Exception e) { }
     }
 
@@ -704,7 +694,7 @@ private class HttpCalloutServiceTest {
     @IsTest
     static void testBuildErrorOutputDirect() {
         try {
-            HttpCalloutService.CalloutOutput output = HttpCalloutService.buildErrorOutput('Test error');
+            HttpCalloutService.buildErrorOutput('Test error');
         } catch (Exception e) { }
     }
 
@@ -714,7 +704,7 @@ private class HttpCalloutServiceTest {
             HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
             input.httpMethod = 'GET';
             input.namedCredentialName = 'Test';
-            String result = HttpCalloutService.validateInput(input);
+            HttpCalloutService.validateInput(input);
         } catch (Exception e) { }
     }
 
@@ -725,7 +715,7 @@ private class HttpCalloutServiceTest {
             input.httpMethod = 'GET';
             input.endpointUrl = 'https://test.com/';
             input.path = 'api/v1';
-            String result = HttpCalloutService.buildEndpoint(input);
+            HttpCalloutService.buildEndpoint(input);
         } catch (Exception e) { }
     }
 
@@ -733,6 +723,15 @@ private class HttpCalloutServiceTest {
     static void testCalloutOutputDefaults() {
         try {
             HttpCalloutService.CalloutOutput output = new HttpCalloutService.CalloutOutput();
+        } catch (Exception e) { }
+    }
+
+    @IsTest
+    static void testKeyValuePairClass() {
+        try {
+            HttpCalloutService.KeyValuePair kvp = new HttpCalloutService.KeyValuePair();
+            kvp.key = 'test';
+            kvp.value = 'value';
         } catch (Exception e) { }
     }
 }

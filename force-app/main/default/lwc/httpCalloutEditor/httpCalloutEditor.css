@@ -1,0 +1,38 @@
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #d8dde6;
+}
+
+.key-value-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.input-key,
+.input-value {
+    flex: 1;
+}
+
+.remove-btn {
+    flex-shrink: 0;
+    margin-bottom: 0.25rem;
+}
+
+.column-labels {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.label-key,
+.label-value {
+    flex: 1;
+}
+
+.remove-placeholder {
+    width: 32px;
+    flex-shrink: 0;
+}

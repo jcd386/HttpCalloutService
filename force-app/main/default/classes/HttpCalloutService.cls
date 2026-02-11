@@ -1,8 +1,9 @@
 /**
  * @description Generic HTTP callout service for Flow and Apex consumption.
  *              Supports both Named Credentials (recommended) and direct URLs.
- *              Headers and query parameters use numbered field pairs that appear
- *              directly in the Flow action UI — no collections or JSON required.
+ *              Headers and query parameters are passed as JSON arrays.
+ *              Includes a Custom Property Editor (httpCalloutEditor) for
+ *              a clean Flow Builder experience with dynamic add/remove rows.
  *
  * USAGE MODES:
  * - Named Credential Mode: Provide namedCredentialName for secure, managed auth
@@ -26,6 +27,19 @@ public with sharing class HttpCalloutService {
     @TestVisible private static final Set<String> BODY_METHODS = new Set<String>{
         'POST', 'PUT', 'PATCH'
     };
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // INNER CLASSES
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * @description Simple key-value pair for JSON deserialization of headers
+     *              and query parameters.
+     */
+    public class KeyValuePair {
+        public String key;
+        public String value;
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // INNER CLASSES - Input/Output Wrappers
@@ -56,89 +70,13 @@ public with sharing class HttpCalloutService {
             description='Timeout in milliseconds (default: 30000, max: 120000)')
         public Integer timeout;
 
-        // ── Headers (up to 5) ──────────────────────────────────────────────
+        @InvocableVariable(label='Headers JSON'
+            description='JSON array of key-value pairs: [{"key":"Authorization","value":"Bearer xyz"}]')
+        public String headersJson;
 
-        @InvocableVariable(label='Header 1 Key'
-            description='Name of the first request header (e.g., Authorization)')
-        public String headerKey1;
-
-        @InvocableVariable(label='Header 1 Value'
-            description='Value of the first request header (e.g., Bearer xyz)')
-        public String headerValue1;
-
-        @InvocableVariable(label='Header 2 Key'
-            description='Name of the second request header')
-        public String headerKey2;
-
-        @InvocableVariable(label='Header 2 Value'
-            description='Value of the second request header')
-        public String headerValue2;
-
-        @InvocableVariable(label='Header 3 Key'
-            description='Name of the third request header')
-        public String headerKey3;
-
-        @InvocableVariable(label='Header 3 Value'
-            description='Value of the third request header')
-        public String headerValue3;
-
-        @InvocableVariable(label='Header 4 Key'
-            description='Name of the fourth request header')
-        public String headerKey4;
-
-        @InvocableVariable(label='Header 4 Value'
-            description='Value of the fourth request header')
-        public String headerValue4;
-
-        @InvocableVariable(label='Header 5 Key'
-            description='Name of the fifth request header')
-        public String headerKey5;
-
-        @InvocableVariable(label='Header 5 Value'
-            description='Value of the fifth request header')
-        public String headerValue5;
-
-        // ── Query Parameters (up to 5) ─────────────────────────────────────
-
-        @InvocableVariable(label='Query Param 1 Key'
-            description='Name of the first query parameter')
-        public String queryParamKey1;
-
-        @InvocableVariable(label='Query Param 1 Value'
-            description='Value of the first query parameter')
-        public String queryParamValue1;
-
-        @InvocableVariable(label='Query Param 2 Key'
-            description='Name of the second query parameter')
-        public String queryParamKey2;
-
-        @InvocableVariable(label='Query Param 2 Value'
-            description='Value of the second query parameter')
-        public String queryParamValue2;
-
-        @InvocableVariable(label='Query Param 3 Key'
-            description='Name of the third query parameter')
-        public String queryParamKey3;
-
-        @InvocableVariable(label='Query Param 3 Value'
-            description='Value of the third query parameter')
-        public String queryParamValue3;
-
-        @InvocableVariable(label='Query Param 4 Key'
-            description='Name of the fourth query parameter')
-        public String queryParamKey4;
-
-        @InvocableVariable(label='Query Param 4 Value'
-            description='Value of the fourth query parameter')
-        public String queryParamValue4;
-
-        @InvocableVariable(label='Query Param 5 Key'
-            description='Name of the fifth query parameter')
-        public String queryParamKey5;
-
-        @InvocableVariable(label='Query Param 5 Value'
-            description='Value of the fifth query parameter')
-        public String queryParamValue5;
+        @InvocableVariable(label='Query Params JSON'
+            description='JSON array of key-value pairs: [{"key":"status","value":"active"}]')
+        public String queryParamsJson;
     }
 
     public class CalloutOutput {
@@ -172,6 +110,7 @@ public with sharing class HttpCalloutService {
         label='HTTP Callout'
         description='Perform an HTTP callout with Named Credential or direct URL'
         category='Integration'
+        configurationEditor='c-http-callout-editor'
     )
     public static List<CalloutOutput> executeCallout(List<CalloutInput> inputs) {
         List<CalloutOutput> outputs = new List<CalloutOutput>();
@@ -278,20 +217,19 @@ public with sharing class HttpCalloutService {
     @TestVisible
     private static Map<String, String> collectHeaders(CalloutInput input) {
         Map<String, String> headers = new Map<String, String>();
-        if (String.isNotBlank(input.headerKey1)) {
-            headers.put(input.headerKey1, input.headerValue1 != null ? input.headerValue1 : '');
-        }
-        if (String.isNotBlank(input.headerKey2)) {
-            headers.put(input.headerKey2, input.headerValue2 != null ? input.headerValue2 : '');
-        }
-        if (String.isNotBlank(input.headerKey3)) {
-            headers.put(input.headerKey3, input.headerValue3 != null ? input.headerValue3 : '');
-        }
-        if (String.isNotBlank(input.headerKey4)) {
-            headers.put(input.headerKey4, input.headerValue4 != null ? input.headerValue4 : '');
-        }
-        if (String.isNotBlank(input.headerKey5)) {
-            headers.put(input.headerKey5, input.headerValue5 != null ? input.headerValue5 : '');
+        if (String.isNotBlank(input.headersJson)) {
+            try {
+                List<KeyValuePair> pairs = (List<KeyValuePair>) JSON.deserialize(
+                    input.headersJson, List<KeyValuePair>.class
+                );
+                for (KeyValuePair pair : pairs) {
+                    if (String.isNotBlank(pair.key)) {
+                        headers.put(pair.key, pair.value != null ? pair.value : '');
+                    }
+                }
+            } catch (Exception e) {
+                // Invalid JSON — return empty headers rather than failing
+            }
         }
         return headers;
     }
@@ -299,20 +237,19 @@ public with sharing class HttpCalloutService {
     @TestVisible
     private static Map<String, String> collectQueryParams(CalloutInput input) {
         Map<String, String> params = new Map<String, String>();
-        if (String.isNotBlank(input.queryParamKey1)) {
-            params.put(input.queryParamKey1, input.queryParamValue1 != null ? input.queryParamValue1 : '');
-        }
-        if (String.isNotBlank(input.queryParamKey2)) {
-            params.put(input.queryParamKey2, input.queryParamValue2 != null ? input.queryParamValue2 : '');
-        }
-        if (String.isNotBlank(input.queryParamKey3)) {
-            params.put(input.queryParamKey3, input.queryParamValue3 != null ? input.queryParamValue3 : '');
-        }
-        if (String.isNotBlank(input.queryParamKey4)) {
-            params.put(input.queryParamKey4, input.queryParamValue4 != null ? input.queryParamValue4 : '');
-        }
-        if (String.isNotBlank(input.queryParamKey5)) {
-            params.put(input.queryParamKey5, input.queryParamValue5 != null ? input.queryParamValue5 : '');
+        if (String.isNotBlank(input.queryParamsJson)) {
+            try {
+                List<KeyValuePair> pairs = (List<KeyValuePair>) JSON.deserialize(
+                    input.queryParamsJson, List<KeyValuePair>.class
+                );
+                for (KeyValuePair pair : pairs) {
+                    if (String.isNotBlank(pair.key)) {
+                        params.put(pair.key, pair.value != null ? pair.value : '');
+                    }
+                }
+            } catch (Exception e) {
+                // Invalid JSON — return empty params rather than failing
+            }
         }
         return params;
     }
