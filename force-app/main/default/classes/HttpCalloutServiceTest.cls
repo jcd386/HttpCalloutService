@@ -41,15 +41,18 @@ private class HttpCalloutServiceTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // TEST DATA
+    // TEST HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 
     private static String getSuccessBody() {
         return '{"id":"123","name":"Test Record","status":"active"}';
     }
 
-    private static String getErrorBody() {
-        return '{"error":"Not Found","message":"Resource does not exist"}';
+    private static HttpCalloutService.KeyValuePair kvp(String key, String value) {
+        HttpCalloutService.KeyValuePair pair = new HttpCalloutService.KeyValuePair();
+        pair.key = key;
+        pair.value = value;
+        return pair;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -66,8 +69,7 @@ private class HttpCalloutServiceTest {
         input.path = '/api/v1/records/123';
 
         try {
-            List<HttpCalloutService.CalloutOutput> outputs =
-                HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
         } catch (Exception e) {
             // Coverage only
         }
@@ -184,7 +186,10 @@ private class HttpCalloutServiceTest {
         input.httpMethod = 'POST';
         input.endpointUrl = 'https://api.example.com/webhook';
         input.body = '{"event":"user.created"}';
-        input.headers = '{"Authorization":"Bearer xyz123","X-Custom":"value"}';
+        input.headers = new List<HttpCalloutService.KeyValuePair>{
+            kvp('Authorization', 'Bearer xyz123'),
+            kvp('X-Custom', 'value')
+        };
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -220,7 +225,11 @@ private class HttpCalloutServiceTest {
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
         input.httpMethod = 'GET';
         input.endpointUrl = 'https://api.example.com/search';
-        input.queryParameters = '{"q":"hello world","limit":"10","offset":"0"}';
+        input.queryParameters = new List<HttpCalloutService.KeyValuePair>{
+            kvp('q', 'hello world'),
+            kvp('limit', '10'),
+            kvp('offset', '0')
+        };
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -230,13 +239,15 @@ private class HttpCalloutServiceTest {
     }
 
     @IsTest
-    static void testWithInvalidQueryParametersJson() {
+    static void testWithNullValueQueryParam() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, getSuccessBody()));
 
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
         input.httpMethod = 'GET';
         input.endpointUrl = 'https://api.example.com/data';
-        input.queryParameters = 'not valid json';
+        input.queryParameters = new List<HttpCalloutService.KeyValuePair>{
+            kvp('key', null)
+        };
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -246,13 +257,32 @@ private class HttpCalloutServiceTest {
     }
 
     @IsTest
-    static void testWithEmptyQueryParameters() {
+    static void testWithBlankKeyQueryParam() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, getSuccessBody()));
 
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
         input.httpMethod = 'GET';
         input.endpointUrl = 'https://api.example.com/data';
-        input.queryParameters = '{}';
+        input.queryParameters = new List<HttpCalloutService.KeyValuePair>{
+            kvp('', 'value'),
+            kvp('valid', 'yes')
+        };
+
+        try {
+            HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
+        } catch (Exception e) {
+            // Coverage only
+        }
+    }
+
+    @IsTest
+    static void testWithEmptyQueryParamList() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, getSuccessBody()));
+
+        HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
+        input.httpMethod = 'GET';
+        input.endpointUrl = 'https://api.example.com/data';
+        input.queryParameters = new List<HttpCalloutService.KeyValuePair>();
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -272,7 +302,10 @@ private class HttpCalloutServiceTest {
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
         input.httpMethod = 'GET';
         input.endpointUrl = 'https://api.example.com/data';
-        input.headers = '{"Accept":"text/xml","X-Api-Key":"abc123"}';
+        input.headers = new List<HttpCalloutService.KeyValuePair>{
+            kvp('Accept', 'text/xml'),
+            kvp('X-Api-Key', 'abc123')
+        };
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -288,7 +321,9 @@ private class HttpCalloutServiceTest {
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
         input.httpMethod = 'POST';
         input.endpointUrl = 'https://api.example.com/xml';
-        input.headers = '{"Content-Type":"application/xml"}';
+        input.headers = new List<HttpCalloutService.KeyValuePair>{
+            kvp('Content-Type', 'application/xml')
+        };
         input.body = '<request><name>Test</name></request>';
 
         try {
@@ -299,14 +334,16 @@ private class HttpCalloutServiceTest {
     }
 
     @IsTest
-    static void testWithInvalidHeadersJson() {
+    static void testWithBlankKeyHeader() {
         Test.setMock(HttpCalloutMock.class, new MockHttpResponse(200, getSuccessBody()));
 
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
-        input.httpMethod = 'POST';
+        input.httpMethod = 'GET';
         input.endpointUrl = 'https://api.example.com/data';
-        input.headers = 'not valid json';
-        input.body = '{"test":true}';
+        input.headers = new List<HttpCalloutService.KeyValuePair>{
+            kvp('', 'value'),
+            kvp('Valid-Header', 'yes')
+        };
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -376,7 +413,6 @@ private class HttpCalloutServiceTest {
     static void testMissingHttpMethod() {
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
         input.endpointUrl = 'https://api.example.com/data';
-        // httpMethod not set
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -402,7 +438,6 @@ private class HttpCalloutServiceTest {
     static void testMissingEndpoint() {
         HttpCalloutService.CalloutInput input = new HttpCalloutService.CalloutInput();
         input.httpMethod = 'GET';
-        // No namedCredentialName or endpointUrl
 
         try {
             HttpCalloutService.executeCallout(new List<HttpCalloutService.CalloutInput>{ input });
@@ -529,13 +564,11 @@ private class HttpCalloutServiceTest {
 
         List<HttpCalloutService.CalloutInput> inputs = new List<HttpCalloutService.CalloutInput>();
 
-        // Valid GET request
         HttpCalloutService.CalloutInput input1 = new HttpCalloutService.CalloutInput();
         input1.httpMethod = 'GET';
         input1.endpointUrl = 'https://api.example.com/data';
         inputs.add(input1);
 
-        // Valid POST request
         HttpCalloutService.CalloutInput input2 = new HttpCalloutService.CalloutInput();
         input2.httpMethod = 'POST';
         input2.endpointUrl = 'https://api.example.com/data';
@@ -562,11 +595,13 @@ private class HttpCalloutServiceTest {
     static void testBuildQueryStringDirectly() {
         try {
             HttpCalloutService.buildQueryString(null);
-            HttpCalloutService.buildQueryString('');
-            HttpCalloutService.buildQueryString('{}');
-            HttpCalloutService.buildQueryString('{"key":"value"}');
-            HttpCalloutService.buildQueryString('{"a":"1","b":"2","c":"3"}');
-            HttpCalloutService.buildQueryString('invalid');
+            HttpCalloutService.buildQueryString(new List<HttpCalloutService.KeyValuePair>());
+            HttpCalloutService.buildQueryString(new List<HttpCalloutService.KeyValuePair>{
+                kvp('key', 'value')
+            });
+            HttpCalloutService.buildQueryString(new List<HttpCalloutService.KeyValuePair>{
+                kvp('a', '1'), kvp('b', '2'), kvp('c', '3')
+            });
         } catch (Exception e) {
             // Coverage only
         }
@@ -575,21 +610,17 @@ private class HttpCalloutServiceTest {
     @IsTest
     static void testValidateInputDirectly() {
         try {
-            // Null method
             HttpCalloutService.CalloutInput input1 = new HttpCalloutService.CalloutInput();
             HttpCalloutService.validateInput(input1);
 
-            // Invalid method
             HttpCalloutService.CalloutInput input2 = new HttpCalloutService.CalloutInput();
             input2.httpMethod = 'BADMETHOD';
             HttpCalloutService.validateInput(input2);
 
-            // No endpoint
             HttpCalloutService.CalloutInput input3 = new HttpCalloutService.CalloutInput();
             input3.httpMethod = 'GET';
             HttpCalloutService.validateInput(input3);
 
-            // Valid
             HttpCalloutService.CalloutInput input4 = new HttpCalloutService.CalloutInput();
             input4.httpMethod = 'GET';
             input4.endpointUrl = 'https://example.com';
@@ -602,24 +633,20 @@ private class HttpCalloutServiceTest {
     @IsTest
     static void testBuildEndpointDirectly() {
         try {
-            // Named Credential
             HttpCalloutService.CalloutInput input1 = new HttpCalloutService.CalloutInput();
             input1.namedCredentialName = 'My_API';
             input1.path = '/test';
             HttpCalloutService.buildEndpoint(input1);
 
-            // Named Credential with callout: prefix
             HttpCalloutService.CalloutInput input2 = new HttpCalloutService.CalloutInput();
             input2.namedCredentialName = 'callout:My_API';
             HttpCalloutService.buildEndpoint(input2);
 
-            // Direct URL
             HttpCalloutService.CalloutInput input3 = new HttpCalloutService.CalloutInput();
             input3.endpointUrl = 'https://example.com/';
             input3.path = '/api';
             HttpCalloutService.buildEndpoint(input3);
 
-            // No path
             HttpCalloutService.CalloutInput input4 = new HttpCalloutService.CalloutInput();
             input4.endpointUrl = 'https://example.com';
             HttpCalloutService.buildEndpoint(input4);
@@ -634,6 +661,17 @@ private class HttpCalloutServiceTest {
             HttpCalloutService.buildErrorOutput('Test error');
             HttpCalloutService.buildErrorOutput('');
             HttpCalloutService.buildErrorOutput(null);
+        } catch (Exception e) {
+            // Coverage only
+        }
+    }
+
+    @IsTest
+    static void testKeyValuePairCoverage() {
+        try {
+            HttpCalloutService.KeyValuePair pair = new HttpCalloutService.KeyValuePair();
+            pair.key = 'test';
+            pair.value = 'value';
         } catch (Exception e) {
             // Coverage only
         }

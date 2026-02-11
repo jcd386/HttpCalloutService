@@ -27,6 +27,25 @@ public with sharing class HttpCalloutService {
     };
 
     // ─────────────────────────────────────────────────────────────────────────
+    // INNER CLASSES - Apex-Defined Data Types
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * @description Key-value pair for headers and query parameters.
+     *              In Flow Builder, create variables of this type and add them
+     *              to a collection to pass multiple headers or query params.
+     */
+    public class KeyValuePair {
+        @InvocableVariable(required=true label='Key'
+            description='Header name or query parameter name')
+        public String key;
+
+        @InvocableVariable(required=true label='Value'
+            description='Header value or query parameter value')
+        public String value;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // INNER CLASSES - Input/Output Wrappers
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -47,17 +66,17 @@ public with sharing class HttpCalloutService {
             description='Path appended to endpoint (e.g., /api/v1/users)')
         public String path;
 
-        @InvocableVariable(label='Headers (JSON)'
-            description='JSON string of headers: {"Authorization": "Bearer xyz"}')
-        public String headers;
+        @InvocableVariable(label='Headers'
+            description='Collection of KeyValuePair records for request headers')
+        public List<KeyValuePair> headers;
 
         @InvocableVariable(label='Body'
             description='Request body for POST/PUT/PATCH')
         public String body;
 
-        @InvocableVariable(label='Query Parameters (JSON)'
-            description='JSON string of query params: {"search": "hello", "limit": "10"}')
-        public String queryParameters;
+        @InvocableVariable(label='Query Parameters'
+            description='Collection of KeyValuePair records for URL query parameters')
+        public List<KeyValuePair> queryParameters;
 
         @InvocableVariable(label='Timeout (ms)'
             description='Timeout in milliseconds (default: 30000, max: 120000)')
@@ -71,8 +90,8 @@ public with sharing class HttpCalloutService {
         @InvocableVariable(label='Response Body')
         public String responseBody;
 
-        @InvocableVariable(label='Response Headers (JSON)')
-        public String responseHeaders;
+        @InvocableVariable(label='Response Headers')
+        public List<KeyValuePair> responseHeaders;
 
         @InvocableVariable(label='Success')
         public Boolean isSuccess;
@@ -83,6 +102,7 @@ public with sharing class HttpCalloutService {
         public CalloutOutput() {
             this.isSuccess = false;
             this.errorMessage = '';
+            this.responseHeaders = new List<KeyValuePair>();
         }
     }
 
@@ -201,52 +221,37 @@ public with sharing class HttpCalloutService {
     }
 
     @TestVisible
-    private static String buildQueryString(String queryParamsJson) {
-        if (String.isBlank(queryParamsJson)) {
+    private static String buildQueryString(List<KeyValuePair> queryParams) {
+        if (queryParams == null || queryParams.isEmpty()) {
             return '';
         }
 
-        try {
-            Map<String, Object> params = (Map<String, Object>) JSON.deserializeUntyped(queryParamsJson);
-            if (params.isEmpty()) {
-                return '';
-            }
-
-            List<String> parts = new List<String>();
-            for (String key : params.keySet()) {
-                Object value = params.get(key);
-                String encodedKey = EncodingUtil.urlEncode(key, 'UTF-8');
+        List<String> parts = new List<String>();
+        for (KeyValuePair param : queryParams) {
+            if (String.isNotBlank(param.key)) {
+                String encodedKey = EncodingUtil.urlEncode(param.key, 'UTF-8');
                 String encodedValue = EncodingUtil.urlEncode(
-                    value != null ? String.valueOf(value) : '', 'UTF-8'
+                    param.value != null ? param.value : '', 'UTF-8'
                 );
                 parts.add(encodedKey + '=' + encodedValue);
             }
-
-            return '?' + String.join(parts, '&');
-        } catch (Exception e) {
-            System.debug(LoggingLevel.WARN,
-                'HttpCalloutService: Failed to parse query parameters JSON: ' + e.getMessage());
-            return '';
         }
+
+        return parts.isEmpty() ? '' : '?' + String.join(parts, '&');
     }
 
     @TestVisible
-    private static void applyHeaders(HttpRequest req, String headersJson, Boolean hasBody) {
+    private static void applyHeaders(HttpRequest req, List<KeyValuePair> headers, Boolean hasBody) {
         Boolean contentTypeSet = false;
 
-        if (String.isNotBlank(headersJson)) {
-            try {
-                Map<String, Object> headerMap = (Map<String, Object>) JSON.deserializeUntyped(headersJson);
-                for (String key : headerMap.keySet()) {
-                    String value = String.valueOf(headerMap.get(key));
-                    req.setHeader(key, value);
-                    if (key.equalsIgnoreCase('Content-Type')) {
+        if (headers != null && !headers.isEmpty()) {
+            for (KeyValuePair header : headers) {
+                if (String.isNotBlank(header.key)) {
+                    req.setHeader(header.key, header.value != null ? header.value : '');
+                    if (header.key.equalsIgnoreCase('Content-Type')) {
                         contentTypeSet = true;
                     }
                 }
-            } catch (Exception e) {
-                System.debug(LoggingLevel.WARN,
-                    'HttpCalloutService: Failed to parse headers JSON: ' + e.getMessage());
             }
         }
 
@@ -280,20 +285,23 @@ public with sharing class HttpCalloutService {
     }
 
     @TestVisible
-    private static String collectResponseHeaders(HttpResponse res) {
+    private static List<KeyValuePair> collectResponseHeaders(HttpResponse res) {
+        List<KeyValuePair> headerList = new List<KeyValuePair>();
         try {
-            Map<String, String> headerMap = new Map<String, String>();
             List<String> headerKeys = res.getHeaderKeys();
             if (headerKeys != null) {
                 for (String key : headerKeys) {
                     if (key != null) {
-                        headerMap.put(key, res.getHeader(key));
+                        KeyValuePair kvp = new KeyValuePair();
+                        kvp.key = key;
+                        kvp.value = res.getHeader(key);
+                        headerList.add(kvp);
                     }
                 }
             }
-            return JSON.serialize(headerMap);
         } catch (Exception e) {
-            return '{}';
+            // Return empty list on error
         }
+        return headerList;
     }
 }

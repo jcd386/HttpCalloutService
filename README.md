@@ -9,9 +9,8 @@ A generic, Flow-invocable Apex class for performing HTTP callouts from Salesforc
 - **Flow-Ready**: Appears as "HTTP Callout" action in Flow Builder under the Integration category
 - **Named Credential Mode**: Secure, platform-managed authentication for production APIs
 - **Direct URL Mode**: Flexible endpoint targeting for ad-hoc integrations (requires Remote Site Setting)
-- **Configurable Headers**: Pass custom headers as a JSON string
-- **Query Parameters**: Pass query params as JSON — automatically URL-encoded
-- **Structured Output**: Status code, response body, response headers (JSON), success boolean, and error message
+- **Structured Headers & Query Params**: Use `KeyValuePair` collections — no JSON required. Add key-value pairs using Flow variables instead of hand-typing JSON strings
+- **Structured Output**: Status code, response body, response headers (as KeyValuePair collection), success boolean, and error message
 - **Bulk-Safe**: Processes multiple callout requests in a single invocation
 
 ## Apex Classes
@@ -19,7 +18,7 @@ A generic, Flow-invocable Apex class for performing HTTP callouts from Salesforc
 | Class | Description |
 |-------|-------------|
 | `HttpCalloutService.cls` | Invocable service class with configurable HTTP callout logic |
-| `HttpCalloutServiceTest.cls` | Test class with 32 tests covering all methods and error scenarios |
+| `HttpCalloutServiceTest.cls` | Test class with 34 tests covering all methods and error scenarios |
 
 ## Installation
 
@@ -55,9 +54,9 @@ sf project deploy start --target-org YOUR_ORG_ALIAS
 | Named Credential Name | Text | No | Developer name of a Named Credential (e.g., `My_API`) |
 | Endpoint URL | Text | No | Full URL for direct mode (e.g., `https://api.example.com`) |
 | Path | Text | No | Appended to endpoint (e.g., `/api/v1/users`) |
-| Headers (JSON) | Text | No | `{"Authorization": "Bearer xyz", "Accept": "text/xml"}` |
+| Headers | Collection of `KeyValuePair` | No | Request headers as key-value pairs |
 | Body | Text | No | Request body for POST/PUT/PATCH |
-| Query Parameters (JSON) | Text | No | `{"search": "hello", "limit": "10"}` |
+| Query Parameters | Collection of `KeyValuePair` | No | URL query params as key-value pairs (auto URL-encoded) |
 | Timeout (ms) | Number | No | Timeout in milliseconds (default: 30000, max: 120000) |
 
 **Note**: Either Named Credential Name or Endpoint URL is required (not both).
@@ -68,32 +67,151 @@ sf project deploy start --target-org YOUR_ORG_ALIAS
 |--------|------|-------------|
 | Status Code | Number | HTTP response status code (200, 401, 500, etc.) |
 | Response Body | Text | Full response body |
-| Response Headers (JSON) | Text | JSON string of all response headers |
+| Response Headers | Collection of `KeyValuePair` | All response headers as key-value pairs |
 | Success | Boolean | `true` if status code is 2xx |
 | Error Message | Text | Error details on validation failure, exception, or non-2xx response |
 
-### Example: Named Credential GET
+### KeyValuePair Type
+
+`KeyValuePair` is an Apex-Defined Data Type with two fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Key | Text | Header name or query parameter name |
+| Value | Text | Header value or query parameter value |
+
+### Setting Up Headers/Query Params in Flow
+
+1. **Create a variable**: New Resource > Variable > Data Type: Apex-Defined > Type: `HttpCalloutService.KeyValuePair`
+2. **Set the key and value**: Use an Assignment element to set `{!myHeader.key}` = `Authorization` and `{!myHeader.value}` = `Bearer xyz`
+3. **Add to a collection**: Use an Assignment element to add `{!myHeader}` to a collection variable `{!headerCollection}`
+4. **Pass to the action**: Set the Headers input to `{!headerCollection}`
+
+Repeat steps 1-3 for each header or query parameter you need.
+
+### Example: Named Credential GET with Query Params
 
 ```
 HTTP Method:            GET
 Named Credential Name:  My_External_API
 Path:                   /api/v1/accounts
-Query Parameters:       {"status": "active", "limit": "25"}
+Query Parameters:       Collection with: {key: "status", value: "active"}, {key: "limit", value: "25"}
 ```
 
-### Example: Direct URL POST
+### Example: Direct URL POST with Headers
 
 ```
 HTTP Method:    POST
 Endpoint URL:   https://hooks.example.com/webhook
-Headers:        {"Authorization": "Bearer my-token", "X-Custom": "value"}
+Headers:        Collection with: {key: "Authorization", value: "Bearer my-token"}, {key: "X-Custom", value: "value"}
 Body:           {"event": "record.created", "id": "001xx000003ABCD"}
 ```
 
-## Prerequisites
+## Setting Up Named Credentials
 
-- **Named Credential Mode**: Create a Named Credential in Setup pointing to your external API
-- **Direct URL Mode**: Add a Remote Site Setting in Setup for the target domain
+Named Credentials are the recommended way to manage authentication. The modern architecture (API 50+) uses a three-layer model: **External Credential** (auth config) > **Named Credential** (endpoint URL) > **Permission Set** (user access).
+
+### Step 1: Create an External Credential
+
+1. Go to **Setup** > search **"Named Credentials"** > click the **External Credentials** tab
+2. Click **New**
+3. Fill in the fields:
+   - **Label**: e.g., `My API External Cred`
+   - **Name**: e.g., `My_API_External_Cred` (auto-populated)
+   - **Authentication Protocol**: Choose based on your API:
+
+| Protocol | Use When |
+|----------|----------|
+| **Custom** | API key in a header, static Bearer token, or any custom auth header |
+| **OAuth 2.0** | Standard OAuth (Client Credentials, Authorization Code, JWT Bearer) |
+| **AWS Signature Version 4** | AWS APIs |
+
+4. Click **Save**
+
+### Step 2: Create a Principal
+
+A principal defines **whose credentials** are used when making the callout.
+
+1. On your External Credential record, scroll to the **Principals** section
+2. Click **New**
+3. Choose a principal type:
+
+| Type | Description |
+|------|-------------|
+| **Named Principal** | Single shared credential for all users (e.g., a service account API key). Best for org-wide integrations. |
+| **Per-User Principal** | Each user authenticates individually (e.g., per-user OAuth tokens). Best for user-context APIs. |
+
+4. **For Custom protocol (API Key / Bearer Token)**:
+   - After saving the principal, scroll to **Authentication Parameters**
+   - Click **New** and add your credentials:
+     - **Parameter Type**: Choose `Header` (for auth headers) or `Query Parameter`
+     - **Name**: e.g., `Authorization`
+     - **Value**: e.g., `Bearer your-api-key-here`
+   - Add additional parameters as needed (e.g., `X-Api-Key`)
+
+5. **For OAuth 2.0**:
+   - Configure the Identity Provider, Client ID, Client Secret, Token Endpoint, and Scopes on the External Credential
+   - The principal will handle token refresh automatically
+
+### Step 3: Create the Named Credential
+
+1. Go to **Setup** > **Named Credentials** > **Named Credentials** tab
+2. Click **New**
+3. Fill in:
+   - **Label**: e.g., `My API`
+   - **Name**: e.g., `My_API` (this is what you pass to `namedCredentialName` in Flow)
+   - **URL**: The base URL of the API (e.g., `https://api.example.com`)
+   - **External Credential**: Select the External Credential from Step 1
+   - **Generate Authorization Header**: Check this if the External Credential should automatically add auth headers
+4. Click **Save**
+
+### Step 4: Grant Access via Permission Set
+
+Users need explicit permission to use the External Credential. This is managed through **Permission Sets** (not profiles — best practice).
+
+1. Go to **Setup** > **Permission Sets**
+2. Create a new Permission Set or open an existing one
+   - **Label**: e.g., `My API Access`
+3. In the Permission Set, find **External Credential Principal Access**
+4. Click **Edit**
+5. Move your principal (e.g., `My_API_External_Cred - Named Principal`) from **Available** to **Enabled**
+6. Click **Save**
+7. **Assign the Permission Set** to the users or profiles that need access:
+   - Permission Set > **Manage Assignments** > **Add Assignment** > select users
+
+### Step 5: Per-User Principal Setup (if applicable)
+
+If you chose **Per-User Principal**, each user must also provide their own credentials:
+
+1. Users go to **Personal Settings** > **External Credentials** (or an admin can manage via the **User External Credentials** related list on the User record)
+2. Click **New** or **Edit** next to the credential
+3. Enter their individual authentication parameters (e.g., their personal API key or trigger an OAuth flow)
+
+### Verifying Your Setup
+
+To verify everything is configured correctly:
+
+1. Open **Developer Console** or **Execute Anonymous**:
+   ```apex
+   HttpRequest req = new HttpRequest();
+   req.setEndpoint('callout:My_API/api/v1/health');
+   req.setMethod('GET');
+   HttpResponse res = new Http().send(req);
+   System.debug(res.getStatusCode() + ': ' + res.getBody());
+   ```
+2. If you get a `401` or `403`, check:
+   - Permission Set is assigned to the running user
+   - External Credential Principal Access is enabled on the Permission Set
+   - Authentication parameters are correct on the principal
+
+## Direct URL Mode Prerequisites
+
+If using direct URLs instead of Named Credentials:
+
+1. Go to **Setup** > search **"Remote Site Settings"**
+2. Click **New Remote Site**
+3. Enter the base URL of the external API (e.g., `https://api.example.com`)
+4. Click **Save**
 
 ## License
 
