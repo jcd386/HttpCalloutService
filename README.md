@@ -8,6 +8,7 @@ A generic, Flow-invocable Apex class for performing HTTP callouts from Salesforc
 
 - **Flow-Ready**: Appears as "HTTP Callout" action in Flow Builder under the Integration category
 - **Custom Property Editor**: Dynamic UI with add/remove rows for headers and query parameters — no fixed limits
+- **Flow Variable Support**: Toggle any input field between literal values and Flow resources (variables, text templates, formulas, action outputs)
 - **Named Credential Mode**: Secure, platform-managed authentication for production APIs
 - **Direct URL Mode**: Flexible endpoint targeting for ad-hoc integrations (requires Remote Site Setting)
 - **Structured Output**: Status code, response body, response headers (JSON), success boolean, and error message
@@ -19,7 +20,7 @@ A generic, Flow-invocable Apex class for performing HTTP callouts from Salesforc
 |-----------|------|-------------|
 | `HttpCalloutService.cls` | Apex Class | Invocable service class with configurable HTTP callout logic |
 | `HttpCalloutServiceTest.cls` | Test Class | 63 tests covering all methods and error scenarios |
-| `httpCalloutEditor` | LWC | Custom Property Editor for dynamic header/param configuration in Flow Builder |
+| `httpCalloutEditor` | LWC | Custom Property Editor with Flow variable selection and dynamic header/param rows |
 
 ## Installation
 
@@ -52,8 +53,24 @@ If your org has a **custom namespace** (e.g., `myns`), update the `configuration
 4. The Custom Property Editor loads with a clean UI for configuring the callout:
    - Select HTTP method from a dropdown
    - Enter Named Credential name or direct URL
+   - Toggle any field to **resource mode** to select Flow variables, text templates, or action outputs
    - Add/remove header rows dynamically
    - Add/remove query parameter rows dynamically
+
+### Resource Picker
+
+Each input field (Named Credential, Endpoint URL, Path, Body, Timeout) supports two modes:
+
+- **Literal mode** (default): Type a value directly into the field
+- **Resource mode**: Click the merge field icon next to the label to switch to a dropdown of available Flow resources
+
+Available resources include:
+- Flow variables (filtered by type — String or Number)
+- Text templates (String fields only)
+- Formulas
+- Action call outputs from prior steps in the Flow
+
+This is especially useful for dynamic values like constructing API request bodies from prior action outputs (e.g., passing a text template variable as the Body).
 
 ### Inputs
 
@@ -106,6 +123,13 @@ In Flow Builder, configure the action:
   - Row 1: Key = `Authorization`, Value = `Bearer my-token`
   - Row 2: Key = `X-Custom`, Value = `value`
 - **Body**: `{"event": "record.created", "id": "001xx000003ABCD"}`
+
+### Example: Dynamic Body from Flow Variable
+
+1. Create a **Text Template** in your Flow that builds the JSON body using merge fields from prior steps
+2. On the HTTP Callout action, click the **merge field icon** next to the Body label
+3. Select your text template from the dropdown
+4. The body is populated dynamically at runtime with the resolved template value
 
 ## Setting Up Named Credentials
 

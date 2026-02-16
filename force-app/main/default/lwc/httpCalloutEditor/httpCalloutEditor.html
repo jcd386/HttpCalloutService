@@ -13,65 +13,185 @@
 
     <!-- Named Credential Name -->
     <div class="slds-m-bottom_small">
-        <lightning-input
-            type="text"
-            label="Named Credential Name"
-            value={namedCredentialName}
-            onchange={handleNamedCredentialChange}
-            placeholder="e.g., My_API"
-            field-level-help="Developer name of a Named Credential. Either this or Endpoint URL is required."
-        ></lightning-input>
+        <div class="resource-field-label">
+            <span class="slds-form-element__label">Named Credential Name</span>
+            <lightning-button-icon
+                icon-name={namedCredentialNameToggleIcon}
+                data-field="namedCredentialName"
+                onclick={toggleFieldMode}
+                alternative-text="Toggle resource"
+                variant="bare"
+                size="x-small"
+                class="resource-toggle-btn"
+            ></lightning-button-icon>
+        </div>
+        <template if:false={namedCredentialNameIsResource}>
+            <lightning-input
+                variant="label-hidden"
+                type="text"
+                value={namedCredentialName}
+                data-field="namedCredentialName"
+                onchange={handleFieldLiteral}
+                placeholder="e.g., My_API"
+            ></lightning-input>
+        </template>
+        <template if:true={namedCredentialNameIsResource}>
+            <lightning-combobox
+                variant="label-hidden"
+                value={namedCredentialName}
+                options={stringResourceOptions}
+                data-field="namedCredentialName"
+                onchange={handleFieldResource}
+                placeholder="Select a resource..."
+            ></lightning-combobox>
+        </template>
     </div>
 
     <!-- Endpoint URL -->
     <div class="slds-m-bottom_small">
-        <lightning-input
-            type="text"
-            label="Endpoint URL"
-            value={endpointUrl}
-            onchange={handleEndpointUrlChange}
-            placeholder="e.g., https://api.example.com"
-            field-level-help="Full URL for direct mode (requires Remote Site Setting). Either this or Named Credential is required."
-        ></lightning-input>
+        <div class="resource-field-label">
+            <span class="slds-form-element__label">Endpoint URL</span>
+            <lightning-button-icon
+                icon-name={endpointUrlToggleIcon}
+                data-field="endpointUrl"
+                onclick={toggleFieldMode}
+                alternative-text="Toggle resource"
+                variant="bare"
+                size="x-small"
+                class="resource-toggle-btn"
+            ></lightning-button-icon>
+        </div>
+        <template if:false={endpointUrlIsResource}>
+            <lightning-input
+                variant="label-hidden"
+                type="text"
+                value={endpointUrl}
+                data-field="endpointUrl"
+                onchange={handleFieldLiteral}
+                placeholder="e.g., https://api.example.com"
+            ></lightning-input>
+        </template>
+        <template if:true={endpointUrlIsResource}>
+            <lightning-combobox
+                variant="label-hidden"
+                value={endpointUrl}
+                options={stringResourceOptions}
+                data-field="endpointUrl"
+                onchange={handleFieldResource}
+                placeholder="Select a resource..."
+            ></lightning-combobox>
+        </template>
     </div>
 
     <!-- Path -->
     <div class="slds-m-bottom_small">
-        <lightning-input
-            type="text"
-            label="Path"
-            value={path}
-            onchange={handlePathChange}
-            placeholder="e.g., /api/v1/users"
-            field-level-help="Path appended to the endpoint URL"
-        ></lightning-input>
+        <div class="resource-field-label">
+            <span class="slds-form-element__label">Path</span>
+            <lightning-button-icon
+                icon-name={pathToggleIcon}
+                data-field="path"
+                onclick={toggleFieldMode}
+                alternative-text="Toggle resource"
+                variant="bare"
+                size="x-small"
+                class="resource-toggle-btn"
+            ></lightning-button-icon>
+        </div>
+        <template if:false={pathIsResource}>
+            <lightning-input
+                variant="label-hidden"
+                type="text"
+                value={path}
+                data-field="path"
+                onchange={handleFieldLiteral}
+                placeholder="e.g., /api/v1/users"
+            ></lightning-input>
+        </template>
+        <template if:true={pathIsResource}>
+            <lightning-combobox
+                variant="label-hidden"
+                value={path}
+                options={stringResourceOptions}
+                data-field="path"
+                onchange={handleFieldResource}
+                placeholder="Select a resource..."
+            ></lightning-combobox>
+        </template>
     </div>
 
     <!-- Body (conditional) -->
     <template if:true={showBodyField}>
         <div class="slds-m-bottom_small">
-            <lightning-textarea
-                label="Body"
-                value={body}
-                onchange={handleBodyChange}
-                placeholder='e.g., {"name": "Test"}'
-                field-level-help="Request body for POST/PUT/PATCH"
-            ></lightning-textarea>
+            <div class="resource-field-label">
+                <span class="slds-form-element__label">Body</span>
+                <lightning-button-icon
+                    icon-name={bodyToggleIcon}
+                    data-field="body"
+                    onclick={toggleFieldMode}
+                    alternative-text="Toggle resource"
+                    variant="bare"
+                    size="x-small"
+                    class="resource-toggle-btn"
+                ></lightning-button-icon>
+            </div>
+            <template if:false={bodyIsResource}>
+                <lightning-textarea
+                    variant="label-hidden"
+                    value={body}
+                    data-field="body"
+                    onchange={handleFieldLiteral}
+                    placeholder='e.g., {"name": "Test"}'
+                ></lightning-textarea>
+            </template>
+            <template if:true={bodyIsResource}>
+                <lightning-combobox
+                    variant="label-hidden"
+                    value={body}
+                    options={stringResourceOptions}
+                    data-field="body"
+                    onchange={handleFieldResource}
+                    placeholder="Select a resource..."
+                ></lightning-combobox>
+            </template>
         </div>
     </template>
 
     <!-- Timeout -->
     <div class="slds-m-bottom_small">
-        <lightning-input
-            type="number"
-            label="Timeout (ms)"
-            value={timeout}
-            onchange={handleTimeoutChange}
-            placeholder="30000"
-            min="1"
-            max="120000"
-            field-level-help="Timeout in milliseconds (default: 30000, max: 120000)"
-        ></lightning-input>
+        <div class="resource-field-label">
+            <span class="slds-form-element__label">Timeout (ms)</span>
+            <lightning-button-icon
+                icon-name={timeoutToggleIcon}
+                data-field="timeout"
+                onclick={toggleFieldMode}
+                alternative-text="Toggle resource"
+                variant="bare"
+                size="x-small"
+                class="resource-toggle-btn"
+            ></lightning-button-icon>
+        </div>
+        <template if:false={timeoutIsResource}>
+            <lightning-input
+                variant="label-hidden"
+                type="number"
+                value={timeout}
+                data-field="timeout"
+                onchange={handleFieldLiteral}
+                placeholder="30000"
+                min="1"
+                max="120000"
+            ></lightning-input>
+        </template>
+        <template if:true={timeoutIsResource}>
+            <lightning-combobox
+                variant="label-hidden"
+                value={timeout}
+                options={numberResourceOptions}
+                data-field="timeout"
+                onchange={handleFieldResource}
+                placeholder="Select a resource..."
+            ></lightning-combobox>
+        </template>
     </div>
 
     <!-- ── Headers Section ──────────────────────────────────────── -->

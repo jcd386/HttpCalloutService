@@ -14,7 +14,7 @@ export default class HttpCalloutEditor extends LightningElement {
 
     // ── Flow Builder CPE API ────────────────────────────────────────
     _inputVariables = [];
-    _initialized = false;
+    _builderContext = {};
 
     @api
     get inputVariables() {
@@ -22,25 +22,38 @@ export default class HttpCalloutEditor extends LightningElement {
     }
     set inputVariables(variables) {
         this._inputVariables = variables || [];
-        if (!this._initialized) {
-            this._initFromInputVariables();
-            this._initialized = true;
-        }
+        this._initFromInputVariables();
+    }
+
+    @api
+    get builderContext() {
+        return this._builderContext;
+    }
+    set builderContext(context) {
+        this._builderContext = context || {};
     }
 
     // ── Local state ─────────────────────────────────────────────────
     httpMethod = 'GET';
+
+    // Resource-capable fields: value + mode
     namedCredentialName = '';
+    namedCredentialNameIsResource = false;
     endpointUrl = '';
+    endpointUrlIsResource = false;
     path = '';
+    pathIsResource = false;
     body = '';
+    bodyIsResource = false;
     timeout = null;
+    timeoutIsResource = false;
+
     headers = [];
     queryParams = [];
-
     _nextHeaderId = 1;
     _nextParamId = 1;
 
+    // ── Getters ─────────────────────────────────────────────────────
     get httpMethodOptions() {
         return HTTP_METHOD_OPTIONS;
     }
@@ -57,17 +70,93 @@ export default class HttpCalloutEditor extends LightningElement {
         return this.queryParams.length > 0;
     }
 
+    // Toggle icon getters
+    get namedCredentialNameToggleIcon() {
+        return this.namedCredentialNameIsResource ? 'utility:edit' : 'utility:merge_field';
+    }
+    get endpointUrlToggleIcon() {
+        return this.endpointUrlIsResource ? 'utility:edit' : 'utility:merge_field';
+    }
+    get pathToggleIcon() {
+        return this.pathIsResource ? 'utility:edit' : 'utility:merge_field';
+    }
+    get bodyToggleIcon() {
+        return this.bodyIsResource ? 'utility:edit' : 'utility:merge_field';
+    }
+    get timeoutToggleIcon() {
+        return this.timeoutIsResource ? 'utility:edit' : 'utility:merge_field';
+    }
+
+    // Available Flow resources filtered by type
+    get stringResourceOptions() {
+        return this._getResourceOptions('String');
+    }
+
+    get numberResourceOptions() {
+        return this._getResourceOptions('Number');
+    }
+
+    _getResourceOptions(dataType) {
+        const options = [];
+        const bc = this._builderContext;
+        if (!bc) return options;
+
+        // Flow variables
+        const variables = bc.variables || [];
+        for (const v of variables) {
+            if (v.dataType === dataType) {
+                options.push({ label: v.name, value: v.name });
+            }
+        }
+
+        // Text templates (String only)
+        if (dataType === 'String') {
+            const templates = bc.textTemplates || [];
+            for (const t of templates) {
+                options.push({ label: t.name, value: t.name });
+            }
+        }
+
+        // Formulas
+        const formulas = bc.formulas || [];
+        for (const f of formulas) {
+            if (f.dataType === dataType) {
+                options.push({ label: f.name, value: f.name });
+            }
+        }
+
+        // Action call outputs
+        const actions = bc.actionCalls || [];
+        for (const action of actions) {
+            const outputs = action.outputParameters || [];
+            for (const o of outputs) {
+                if (o.dataType === dataType) {
+                    const ref = action.name + '.' + o.name;
+                    options.push({ label: ref, value: ref });
+                }
+            }
+        }
+
+        // Sort alphabetically
+        options.sort((a, b) => a.label.localeCompare(b.label));
+        return options;
+    }
+
     // ── Initialize from Flow Builder ────────────────────────────────
     _initFromInputVariables() {
         this.httpMethod = this._getInputValue('httpMethod') || 'GET';
-        this.namedCredentialName = this._getInputValue('namedCredentialName') || '';
-        this.endpointUrl = this._getInputValue('endpointUrl') || '';
-        this.path = this._getInputValue('path') || '';
-        this.body = this._getInputValue('body') || '';
 
-        const timeoutVal = this._getInputValue('timeout');
-        this.timeout = timeoutVal != null && timeoutVal !== '' ? timeoutVal : null;
+        // Initialize resource-capable fields
+        const fields = ['namedCredentialName', 'endpointUrl', 'path', 'body', 'timeout'];
+        for (const field of fields) {
+            const variable = this._inputVariables.find(v => v.name === field);
+            if (variable) {
+                this[field] = variable.value != null ? variable.value : '';
+                this[field + 'IsResource'] = variable.valueDataType === 'reference';
+            }
+        }
 
+        // Headers
         const headersJsonVal = this._getInputValue('headersJson');
         if (headersJsonVal) {
             try {
@@ -84,6 +173,7 @@ export default class HttpCalloutEditor extends LightningElement {
             this.headers = [];
         }
 
+        // Query params
         const paramsJsonVal = this._getInputValue('queryParamsJson');
         if (paramsJsonVal) {
             try {
@@ -119,36 +209,37 @@ export default class HttpCalloutEditor extends LightningElement {
         ));
     }
 
-    // ── Core field handlers ─────────────────────────────────────────
+    // ── Generic field handlers (data-field driven) ──────────────────
+    toggleFieldMode(event) {
+        const field = event.currentTarget.dataset.field;
+        const wasResource = this[field + 'IsResource'];
+        this[field + 'IsResource'] = !wasResource;
+        // Clear value on toggle
+        const defaultVal = field === 'timeout' ? null : '';
+        this[field] = defaultVal;
+        this._dispatchChange(field, defaultVal, field === 'timeout' ? 'Number' : 'String');
+    }
+
+    handleFieldLiteral(event) {
+        const field = event.currentTarget.dataset.field;
+        let value = event.detail.value;
+        if (field === 'timeout') {
+            value = value ? parseInt(value, 10) : null;
+        }
+        this[field] = value;
+        this._dispatchChange(field, value, field === 'timeout' ? 'Number' : 'String');
+    }
+
+    handleFieldResource(event) {
+        const field = event.currentTarget.dataset.field;
+        this[field] = event.detail.value;
+        this._dispatchChange(field, event.detail.value, 'reference');
+    }
+
+    // ── HTTP Method (static picklist) ───────────────────────────────
     handleHttpMethodChange(event) {
         this.httpMethod = event.detail.value;
         this._dispatchChange('httpMethod', this.httpMethod, 'String');
-    }
-
-    handleNamedCredentialChange(event) {
-        this.namedCredentialName = event.detail.value;
-        this._dispatchChange('namedCredentialName', this.namedCredentialName, 'String');
-    }
-
-    handleEndpointUrlChange(event) {
-        this.endpointUrl = event.detail.value;
-        this._dispatchChange('endpointUrl', this.endpointUrl, 'String');
-    }
-
-    handlePathChange(event) {
-        this.path = event.detail.value;
-        this._dispatchChange('path', this.path, 'String');
-    }
-
-    handleBodyChange(event) {
-        this.body = event.detail.value;
-        this._dispatchChange('body', this.body, 'String');
-    }
-
-    handleTimeoutChange(event) {
-        const val = event.detail.value;
-        this.timeout = val ? parseInt(val, 10) : null;
-        this._dispatchChange('timeout', this.timeout, 'Number');
     }
 
     // ── Header handlers ─────────────────────────────────────────────
